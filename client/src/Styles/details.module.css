@@ -1,0 +1,46 @@
+.page { padding: var(--s-6) 0 var(--s-8); max-width: 1080px; }
+.head h1 { font-size: var(--fs-3xl); margin: 10px 0 var(--s-5); }
+.timer { position: relative; display: flex; align-items: center; gap: 14px; padding: 16px 20px 20px; margin-bottom: var(--s-5); overflow: hidden; border-radius: var(--r-md); background: var(--brand-soft); border: 1px solid var(--brand-line); color: var(--brand); }
+.timer > div:nth-child(2) { display: grid; line-height: 1.35; }
+.timer small { color: var(--ink-2); font-size: var(--fs-xs); }
+.track { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: color-mix(in srgb, var(--brand) 15%, transparent); }
+.track i { display: block; height: 100%; background: var(--brand); transition: width 1s linear; }
+.urgent { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 40%, transparent); color: var(--danger); animation: throb 1.2s ease-in-out infinite; }
+.urgent .track i { background: var(--danger); }
+@keyframes throb { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--danger) 15%, transparent); } }
+
+.layout { display: grid; grid-template-columns: 1fr 380px; gap: var(--s-5); align-items: start; }
+.form { padding: var(--s-6); }
+.form h2, .summary h2 { font-size: var(--fs-xl); margin-bottom: var(--s-4); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4); }
+.genders { border: 0; padding: 0; margin: var(--s-4) 0 0; min-width: 0; }
+.genders > div { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.genders label { flex: 1; min-width: 100px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); font-weight: 700; font-size: var(--fs-sm); color: var(--ink-2); cursor: pointer; background: var(--surface); transition: all var(--t-fast); }
+.genders label:hover { border-color: var(--brand); }
+.genders input { position: absolute; opacity: 0; pointer-events: none; }
+.genders label:focus-within { box-shadow: var(--sh-ring); border-color: var(--brand); }
+.genders .on { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); }
+.secure { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; font-size: var(--fs-xs); color: var(--ink-3); }
+
+.summary { position: sticky; top: calc(var(--nav-h) + 16px); padding: var(--s-5); display: grid; gap: var(--s-4); }
+.summary h2 { margin: 0; }
+.trip { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: var(--s-4) 0; border-block: 1px dashed var(--line-strong); }
+.trip div { display: grid; }
+.trip time { font-family: var(--font-mono); font-weight: 700; letter-spacing: -.03em; font-size: var(--fs-lg); }
+.trip span { font-size: var(--fs-sm); color: var(--ink-2); }
+.trip i { height: 2px; background: repeating-linear-gradient(90deg, var(--line-strong) 0 6px, transparent 6px 11px); }
+.seatsRow div { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.seatsRow b { min-width: 36px; height: 34px; display: grid; place-items: center; padding: 0 9px; border-radius: var(--r-xs); background: var(--brand-soft); color: var(--brand); border: 1px solid var(--brand-line); font-size: var(--fs-sm); }
+.coupon label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.coupon > div { display: flex; gap: 8px; }
+.coupon input { text-transform: uppercase; letter-spacing: .08em; }
+.applied { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: var(--fs-xs); font-weight: 800; color: var(--success); }
+.fare { margin: 0; display: grid; gap: 8px; }
+.fare div { display: flex; justify-content: space-between; font-size: var(--fs-sm); color: var(--ink-2); }
+.fare dd { margin: 0; font-family: var(--font-mono); font-weight: 700; color: var(--ink); }
+.save dd { color: var(--success); }
+.fare .total { padding-top: 12px; border-top: 1px solid var(--line); color: var(--ink); font-weight: 800; font-size: var(--fs-lg); }
+.fare .total dd { font-family: var(--font-display); font-size: 1.7rem; letter-spacing: -.03em; }
+
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .summary { position: static; order: -1; } .form { padding: var(--s-5); } }
+@media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }

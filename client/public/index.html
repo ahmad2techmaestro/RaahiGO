@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" translate="no" class="notranslate">
+  <head>
+    <meta name="google" content="notranslate" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="Shah Ahmad Raza" />
+    <meta name="theme-color" content="#0d4a42" />
+    <meta
+      name="description"
+      content="RaahiGo — search, compare and book intercity bus journeys across India with live seat maps, secure payments and real-time tracking."
+    />
+    <meta property="og:title" content="RaahiGo — Intercity bus travel, made calm" />
+    <meta property="og:description" content="Live seat maps, secure checkout and real-time tracking across 18+ Indian cities." />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Fonts load without blocking first paint (system fonts show instantly, web fonts swap in). -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=JetBrains+Mono:wght@500;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet" media="print" onload="this.media='all'"
+    />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    </noscript>
+    <script>
+      // Apply the saved theme before first paint to avoid a flash.
+      try {
+        var t = localStorage.getItem("rg-theme");
+        if (!t && window.matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+        if (t) document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+    <title>RaahiGo — Intercity bus travel, made calm</title>
+  </head>
+  <body>
+    <noscript>RaahiGo needs JavaScript to run.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

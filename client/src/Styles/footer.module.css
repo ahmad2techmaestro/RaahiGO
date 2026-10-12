@@ -1,0 +1,36 @@
+.footer {
+  margin-top: var(--s-9); padding: var(--s-8) 0 var(--s-5);
+  background: #08201c; color: rgba(255, 255, 255, 0.72);
+  position: relative; overflow: hidden;
+}
+.footer::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 4px;
+  background: repeating-linear-gradient(90deg, var(--accent) 0 28px, transparent 28px 52px);
+}
+.grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: var(--s-7); }
+.about p { margin-top: var(--s-4); max-width: 38ch; font-size: var(--fs-sm); line-height: 1.7; }
+.status {
+  display: inline-flex; align-items: center; gap: 10px; margin-top: var(--s-5); padding: 7px 14px;
+  font-size: var(--fs-xs); font-weight: 700; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: var(--r-pill);
+}
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: #4fd1a0; box-shadow: 0 0 0 0 rgba(79, 209, 160, 0.6); animation: pulse 2s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 9px rgba(79, 209, 160, 0); } 100% { box-shadow: 0 0 0 0 rgba(79, 209, 160, 0); } }
+.footer h4 {
+  font-family: var(--font-body); font-size: var(--fs-xs); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: var(--s-4); font-weight: 800;
+}
+.footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.footer a { color: rgba(255, 255, 255, 0.72); font-size: var(--fs-sm); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+.footer a:hover { color: #fff; text-decoration: none; }
+.footer li a span { color: var(--accent); }
+.bottom {
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  margin-top: var(--s-7); padding-top: var(--s-5); border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: var(--fs-xs);
+}
+.stack { font-family: var(--font-mono); opacity: 0.6; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr 1fr; gap: var(--s-6); } .about { grid-column: 1 / -1; } }
+.author { color: #fff !important; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.social { display: inline-flex; gap: 14px; }
+.social a { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,.18); }
+.social a:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }

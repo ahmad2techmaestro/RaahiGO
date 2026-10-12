@@ -1,0 +1,76 @@
+.nav {
+  position: sticky; top: 0; z-index: var(--z-nav);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: background var(--t-med), border-color var(--t-med), box-shadow var(--t-med);
+}
+.scrolled { border-bottom-color: var(--line); box-shadow: 0 8px 24px -16px rgba(15, 27, 25, 0.25); }
+.overHero { background: transparent; backdrop-filter: none; position: fixed; left: 0; right: 0; }
+.bar { height: var(--nav-h); display: flex; align-items: center; gap: var(--s-5); }
+.brand { display: inline-flex; text-decoration: none !important; }
+.links { display: flex; gap: 4px; margin-left: var(--s-5); }
+.link {
+  position: relative; padding: 8px 14px; border-radius: var(--r-pill);
+  font-size: var(--fs-sm); font-weight: 700; color: var(--ink-2); text-decoration: none !important;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.link:hover { color: var(--ink); background: var(--bg-sunk); }
+.active { color: var(--brand); background: var(--brand-soft); }
+.overHero .link { color: rgba(255, 255, 255, 0.78); }
+.overHero .link:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+.overHero .active { color: #fff; background: rgba(255, 255, 255, 0.18); }
+
+.right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.iconBtn {
+  width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  transition: all var(--t-fast);
+}
+.iconBtn:hover { color: var(--ink); transform: rotate(12deg); }
+.overHero .iconBtn { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.25); color: #fff; }
+
+.auth { display: flex; align-items: center; gap: 6px; }
+.signin { padding: 8px 14px; font-weight: 700; font-size: var(--fs-sm); color: var(--ink-2); text-decoration: none !important; }
+.signin:hover { color: var(--ink); }
+.overHero .signin { color: #fff; }
+
+.userWrap { position: relative; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--accent);
+  background: var(--brand); color: var(--brand-ink); font-weight: 800; font-family: var(--font-display);
+}
+.menu {
+  position: absolute; right: 0; top: calc(100% + 10px); width: 250px; padding: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  box-shadow: var(--sh-3); transform-origin: top right; display: grid; gap: 2px;
+}
+.menuHead { padding: 10px 12px 12px; border-bottom: 1px solid var(--line); margin-bottom: 4px; display: grid; }
+.menuHead strong { font-size: var(--fs-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menuHead span { font-size: var(--fs-xs); color: var(--ink-3); }
+.menu a, .menu button {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0; background: none;
+  border-radius: var(--r-xs); font-size: var(--fs-sm); font-weight: 600; color: var(--ink);
+  text-align: left; text-decoration: none !important; width: 100%;
+}
+.menu a:hover, .menu button:hover { background: var(--bg-sunk); }
+.menu button:last-child { color: var(--danger); }
+
+.burger { display: none; }
+.drawer { display: none; overflow: hidden; background: var(--surface); border-bottom: 1px solid var(--line); }
+.drawerLink {
+  display: block; width: 100%; padding: 16px 24px; text-align: left; border: 0; border-top: 1px solid var(--line);
+  background: none; font-weight: 700; color: var(--ink); text-decoration: none !important;
+}
+.drawerCta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 20px 20px; border-top: 1px solid var(--line); }
+
+@media (max-width: 860px) {
+  .links, .auth { display: none; }
+  .burger { display: grid; }
+  .drawer { display: block; }
+  .overHero { position: absolute; }
+}
+.wallet { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 99px; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); font-family: var(--font-mono); font-weight: 700; font-size: var(--fs-sm); text-decoration: none; transition: transform var(--t-fast), box-shadow var(--t-fast); }
+.wallet:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--sh-1); }
+.overHero .wallet { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.3); }
+@media (max-width: 420px) { .wallet { padding: 0 9px; } }

@@ -1,0 +1,5 @@
+.wrap { padding: var(--s-7) 0 var(--s-5); }
+.inner { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-5); flex-wrap: wrap; }
+.title { font-size: var(--fs-3xl); margin-top: 10px; }
+.sub { color: var(--ink-2); margin-top: 8px; max-width: 60ch; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }

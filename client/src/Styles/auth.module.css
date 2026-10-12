@@ -1,0 +1,15 @@
+.wrap { display: grid; grid-template-columns: 1.05fr 1fr; min-height: calc(100vh - var(--nav-h)); }
+.art { position: relative; isolation: isolate; overflow: hidden; color: #fff; background: radial-gradient(900px 500px at 0% 0%, #14695d, transparent 60%), linear-gradient(180deg, #08201c, #0d4a42); display: grid; align-items: end; padding: var(--s-8) var(--s-7); }
+.artInner { position: relative; z-index: 1; display: grid; gap: var(--s-5); max-width: 460px; }
+.artInner h2 { color: #fff; font-size: clamp(2rem, 1.4rem + 2vw, 3.1rem); font-weight: 560; line-height: 1.05; }
+.artInner h2 em { color: var(--accent); font-weight: 500; }
+.artInner ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.artInner li { display: flex; align-items: center; gap: 12px; font-size: var(--fs-md); color: rgba(255,255,255,.82); }
+.artInner li svg { flex-shrink: 0; padding: 4px; width: 24px; height: 24px; border-radius: 50%; background: rgba(242,169,59,.22); color: var(--accent); }
+.panel { display: grid; place-items: center; padding: var(--s-7) var(--s-5); }
+.card { width: min(100%, 430px); animation: rise var(--t-slow) var(--ease) both; }
+.card h1 { font-size: var(--fs-3xl); }
+.sub { color: var(--ink-2); margin: 8px 0 var(--s-6); }
+.foot { margin-top: var(--s-5); text-align: center; font-size: var(--fs-sm); color: var(--ink-2); }
+.foot a { font-weight: 800; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } .art { display: none; } }

@@ -1,0 +1,73 @@
+name: CI
+
+# Runs on every push and pull request against main, so a broken build or a
+# failing test is visible before it merges — not discovered after deploy.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  server-tests:
+    name: Server tests (340+ tests, no external services needed)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run test suite
+        run: npm test
+        env:
+          # Tests run against ioredis-mock and real Socket.IO connections
+          # over loopback — no live MongoDB, Redis or Anthropic API key
+          # is needed for any of the 340+ tests to pass. See README
+          # "Testing" for what each suite actually covers.
+          JWT_SECRET: ci-test-secret
+
+  client-build:
+    name: Client build (CI=true, treats warnings as errors)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build
+        run: npm run build
+        env:
+          CI: true
+
+  docker-build:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    needs: [server-tests, client-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build server image
+        run: docker build -t raahigo-server:ci ./server
+
+      - name: Build client image
+        run: docker build -t raahigo-client:ci ./client

@@ -1,0 +1,4 @@
+.page { padding: var(--s-6) 0 var(--s-8); }
+.toolbar { max-width: 820px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: var(--s-4); }
+.toolbar > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.tip { max-width: 820px; margin-top: var(--s-4); text-align: center; font-size: var(--fs-xs); color: var(--ink-3); }

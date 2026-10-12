@@ -1,0 +1,482 @@
+openapi: 3.0.3
+info:
+  title: RaahiGo API
+  description: |
+    REST API for RaahiGo, a MERN bus-ticket-booking platform.
+
+    **Auth:** most routes require a `Bearer <JWT>` header, obtained from
+    `POST /user/login`. A handful of routes are intentionally public:
+    `POST /user/signup`, `GET /bus/search` variants, and
+    `GET /verify/{orderId}` (ticket verification via QR code).
+
+    This spec documents the core, most-used surface of the API rather than
+    every internal route exhaustively — see the README for the full list.
+  version: "1.0.0"
+  contact:
+    name: Shah Ahmad Raza
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+  - url: https://raahigo-api.onrender.com
+    description: Example production deployment (replace with your own)
+
+tags:
+  - name: Auth
+  - name: Search
+  - name: Booking
+  - name: AI
+  - name: Tracking
+  - name: Operator
+  - name: Admin
+
+security:
+  - bearerAuth: []
+
+paths:
+  /user/signup:
+    post:
+      tags: [Auth]
+      summary: Create an account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 6 }
+                gender: { type: string }
+                referralCode:
+                  type: string
+                  description: Optional — links this signup to a referring user
+      responses:
+        "200":
+          description: Signup successful
+        "400":
+          description: Validation error
+        "409":
+          description: Email already registered
+
+  /user/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: Success }
+                  message:
+                    type: object
+                    properties:
+                      token: { type: string }
+                      user: { $ref: "#/components/schemas/SafeUser" }
+        "401":
+          description: Invalid credentials
+
+  /bus/search:
+    post:
+      tags: [Search]
+      summary: Premium search — filters, sorting, pagination, facets
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [from, to]
+              properties:
+                from: { type: string, example: Mumbai }
+                to: { type: string, example: Pune }
+                date: { type: string, format: date }
+                minPrice: { type: number }
+                maxPrice: { type: number }
+                busType: { type: array, items: { type: string, enum: [AC, NONAC] } }
+                seatType: { type: array, items: { type: string, enum: [SLEEPER, SEATER] } }
+                sortBy: { type: string, enum: [price, rating, duration, departure, arrival, seatsAvailable] }
+                sortOrder: { type: string, enum: [asc, desc] }
+                page: { type: integer, default: 1 }
+                limit: { type: integer, default: 10 }
+      responses:
+        "200":
+          description: Search results with pagination and facets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  buses: { type: array, items: { $ref: "#/components/schemas/Bus" } }
+                  pagination: { $ref: "#/components/schemas/Pagination" }
+                  facets: { type: object }
+
+  /ai/search:
+    post:
+      tags: [AI]
+      summary: Natural-language search (parsed, then run through the real search service)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                  example: sleeper bus to Delhi tomorrow under ₹1500, after 8pm
+      responses:
+        "200":
+          description: Either search results, or a clarification request
+        "503":
+          description: AI not configured on this server
+
+  /ai/support:
+    post:
+      tags: [AI]
+      summary: RAG-lite customer support, grounded in real policies
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, maxLength: 500 }
+      responses:
+        "200":
+          description: A grounded answer with cited policy sources
+        "503":
+          description: AI not configured on this server
+
+  /seats/lock:
+    post:
+      tags: [Booking]
+      summary: Hold seats for checkout (10-minute Redis lock)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [busId, date, seats]
+              properties:
+                busId: { type: string }
+                date: { type: string, format: date }
+                seats: { type: array, items: { type: string }, maxItems: 6 }
+      responses:
+        "200":
+          description: Seats locked
+        "409":
+          description: One or more seats are already taken/locked by someone else
+
+  /api/payment/config:
+    get:
+      tags: [Booking]
+      summary: Which payment gateway is active (razorpay or the demo sandbox)
+      responses:
+        "200":
+          description: "{ mode, keyId }"
+
+  /api/payment/quote:
+    get:
+      tags: [Booking]
+      summary: Server-side price quote with wallet usage and per-method cashback
+      parameters:
+        - { in: query, name: busId, required: true, schema: { type: string } }
+        - { in: query, name: date, required: true, schema: { type: string, example: "2026-10-20" } }
+        - { in: query, name: seats, required: true, schema: { type: string, example: "3,4" } }
+        - { in: query, name: couponCode, schema: { type: string } }
+        - { in: query, name: useWallet, schema: { type: boolean } }
+      responses:
+        "200":
+          description: Pricing, wallet, offers and tier
+
+  /api/payment/ticket:
+    post:
+      tags: [Booking]
+      summary: Open a checkout — the server prices it; the client never sends an amount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [busId, date, seats]
+              properties:
+                busId: { type: string }
+                date: { type: string, example: "2026-10-20" }
+                seats: { type: array, items: { type: string } }
+                couponCode: { type: string }
+                useWallet: { type: boolean }
+      responses:
+        "201":
+          description: Gateway order, pricing breakdown and cashback offers
+        "409":
+          description: Seats already booked
+
+  /api/payment/demo/confirm:
+    post:
+      tags: [Booking]
+      summary: Demo gateway only — authorise a payment method and receive a signed payment
+      responses:
+        "200":
+          description: razorpay_order_id, razorpay_payment_id, razorpay_signature
+
+  /api/payment/abandon:
+    post:
+      tags: [Booking]
+      summary: Release a checkout the traveller walked away from (returns reserved wallet money)
+      responses:
+        "200":
+          description: ok
+
+  /api/payment/verify:
+    post:
+      tags: [Booking]
+      summary: Verify the payment signature and create the confirmed booking from the server-side intent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [razorpay_order_id, razorpay_payment_id, razorpay_signature, userDetails]
+      responses:
+        "201":
+          description: Booking confirmed; includes the cashback credited
+        "400":
+          description: Invalid signature or missing fields
+        "409":
+          description: Seats taken or hold expired — the payment is refunded automatically
+
+  /wallet:
+    get:
+      tags: [Booking]
+      summary: Wallet balance, tier, cashback rates and ledger
+      responses:
+        "200":
+          description: Wallet summary
+
+  /profile/passport:
+    get:
+      tags: [Profile]
+      summary: Journey passport — trips, cities, km, savings and CO2 avoided
+      responses:
+        "200":
+          description: Passport stats
+
+  /order/policy:
+    get:
+      tags: [Booking]
+      summary: The tiered cancellation policy
+      responses:
+        "200":
+          description: Refund tiers
+
+  /order/{orderId}/cancel-preview:
+    get:
+      tags: [Booking]
+      summary: Exact refund for cancelling now, for each destination (SOURCE or WALLET)
+      parameters:
+        - { in: path, name: orderId, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Refund plans
+        "403":
+          description: Not your booking
+
+  /order/{orderId}/refund:
+    get:
+      tags: [Booking]
+      summary: Refund progress for a cancelled booking
+      parameters:
+        - { in: path, name: orderId, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Refund status, amounts and ETA
+
+  /order/oneorder/{orderId}:
+    delete:
+      tags: [Booking]
+      summary: Cancel a booking with a tiered refund (body { destination: SOURCE|WALLET })
+      parameters:
+        - { in: path, name: orderId, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Cancelled; refund breakdown included
+        "409":
+          description: Already cancelled or cancellation window closed
+
+  /order/myticket:
+    post:
+      tags: [Booking]
+      summary: The authenticated user's own bookings
+      responses:
+        "200":
+          description: List of the caller's own orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Order" }
+
+  /order/{orderId}/ticket:
+    get:
+      tags: [Booking]
+      summary: Full ticket details + QR verification URL (owner only)
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Ticket data
+        "403":
+          description: Not your booking
+
+  /verify/{orderId}:
+    get:
+      tags: [Booking]
+      summary: Public ticket verification (what a QR scan resolves to)
+      security: []
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: token
+          required: true
+          schema: { type: string }
+          description: HMAC-SHA256 signature proving this link was issued by the server
+      responses:
+        "200":
+          description: Valid ticket — limited public details
+        "400":
+          description: Invalid or tampered verification link
+
+  /tracking/{orderId}:
+    get:
+      tags: [Tracking]
+      summary: Live (simulated) position, ETA and distance for a confirmed booking
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: |
+            Tracking info. Always includes `simulated: true` and a
+            `disclosure` string — there is no real GPS behind this
+            endpoint (see README, "Live tracking").
+
+  /operator/dashboard:
+    get:
+      tags: [Operator]
+      summary: Revenue and occupancy across the operator's own buses
+      responses:
+        "200":
+          description: Aggregated stats, computed from real Order data
+        "403":
+          description: Requires the OPERATOR or ADMIN role
+
+  /admin/overview:
+    get:
+      tags: [Admin]
+      summary: Platform-wide KPIs
+      responses:
+        "200":
+          description: Users, operators, buses, revenue, cancellation rate
+        "403":
+          description: Requires the ADMIN role
+
+  /admin/health:
+    get:
+      tags: [Admin]
+      summary: Real system health (DB, Redis, AI, email, realtime, memory)
+      responses:
+        "200":
+          description: Genuine, queryable facts about the running process
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SafeUser:
+      type: object
+      properties:
+        _id: { type: string }
+        email: { type: string }
+        gender: { type: string }
+        role: { type: string, enum: [PASSENGER, OPERATOR, ADMIN] }
+
+    Bus:
+      type: object
+      properties:
+        _id: { type: string }
+        companyname: { type: string }
+        from: { type: string }
+        to: { type: string }
+        price: { type: number }
+        departure: { type: string, example: "20" }
+        arrival: { type: string, example: "6" }
+        rating: { type: number }
+        aminites: { type: array, items: { type: string } }
+        status: { type: string, enum: [ACTIVE, INACTIVE] }
+        seatsAvailable: { type: integer }
+        durationHours: { type: number }
+
+    Order:
+      type: object
+      properties:
+        _id: { type: string }
+        status:
+          type: string
+          enum: [PENDING, PAYMENT_PENDING, CONFIRMED, CANCELLED, EXPIRED, COMPLETED]
+        busDetails: { type: object }
+        ticketSummary: { type: object }
+        userDetails: { type: object }
+        refund: { type: object }
+
+    Pagination:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+        hasNextPage: { type: boolean }
+        hasPrevPage: { type: boolean }
+
+    ErrorResponse:
+      type: object
+      properties:
+        message: { type: string }

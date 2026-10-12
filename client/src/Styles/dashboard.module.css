@@ -1,0 +1,23 @@
+.page { padding-bottom: var(--s-8); }
+.stack { display: grid; gap: var(--s-4); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s-4); margin-bottom: var(--s-5); }
+.stat { padding: var(--s-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-1); position: relative; overflow: hidden; }
+.stat::after { content: ""; position: absolute; right: -24px; top: -24px; width: 90px; height: 90px; border-radius: 50%; background: var(--brand-soft); }
+.statLabel { position: relative; z-index: 1; display: block; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.statValue { position: relative; z-index: 1; display: block; margin-top: 8px; font-family: var(--font-display); font-size: 2.1rem; font-weight: 600; letter-spacing: -.03em; color: var(--ink); }
+.panel { padding: var(--s-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--sh-1); }
+.panel > h2, .panel > h3 { font-size: var(--fs-xl); margin-bottom: var(--s-4); }
+.panelHead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: var(--s-4); flex-wrap: wrap; }
+.panelHead h2 { font-size: var(--fs-xl); }
+.formGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); margin-bottom: var(--s-4); }
+.hint { color: var(--ink-2); font-size: var(--fs-sm); line-height: 1.65; }
+.narrow { max-width: 520px; margin: var(--s-8) auto; }
+.health { display: flex; flex-wrap: wrap; gap: 10px; }
+.health span { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: var(--fs-sm); font-weight: 600; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-pill); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+.dotOk { background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+.linkBtn { border: 0; background: none; font-weight: 800; font-size: var(--fs-xs); color: var(--brand); padding: 6px 10px; border-radius: var(--r-xs); }
+.linkBtn:hover { background: var(--brand-soft); }
+.bar { height: 6px; background: var(--bg-sunk); border-radius: 6px; overflow: hidden; min-width: 80px; }
+.bar i { display: block; height: 100%; background: var(--brand); border-radius: 6px; }
+@media (max-width: 760px) { .formGrid { grid-template-columns: 1fr; } }

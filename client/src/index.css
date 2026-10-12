@@ -1,0 +1,9 @@
+/* App-level extras that don't belong in the design-system layer. */
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+#root > .app { flex: 1; display: flex; flex-direction: column; }
+#root > .app > main { flex: 1; }
+
+/* Leaflet bus marker (injected outside React's CSS-module scope) */
+.rg-bus-marker { width: 44px; height: 44px; display: grid; place-items: center; font-size: 22px; background: var(--accent, #f2a93b); border: 3px solid #fff; border-radius: 50%; box-shadow: 0 6px 16px rgba(0, 0, 0, .35); animation: rgbus 2s ease-in-out infinite; }
+@keyframes rgbus { 50% { box-shadow: 0 0 0 10px rgba(242, 169, 59, .25), 0 6px 16px rgba(0, 0, 0, .35); } }
+.leaflet-container { font-family: var(--font-body); }
