@@ -1,7 +1,7 @@
-# Netlify settings for the React client (Create React App).
+# Netlify configuration for RaahiGo React frontend
 
 [build]
-command = "npm --prefix client run build"
+command = "npm --prefix client ci && npm --prefix client run build"
 publish = "client/build"
 
 [build.environment]
@@ -9,12 +9,14 @@ NODE_VERSION = "20"
 CI = "false"
 GENERATE_SOURCEMAP = "false"
 
-# React BrowserRouter fallback
+# React Router fallback
 
 [[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200
+
+# Cache static assets
 
 [[headers]]
 for = "/static/*"
