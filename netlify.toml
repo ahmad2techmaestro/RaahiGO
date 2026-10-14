@@ -1,24 +1,18 @@
-# Netlify configuration for RaahiGo React frontend
-
 [build]
-command = "npm --prefix client ci && npm --prefix client run build"
-publish = "client/build"
+  command = "cd client && npm ci && npm run build"
+  publish = "client/build"
 
 [build.environment]
-NODE_VERSION = "20"
-CI = "false"
-GENERATE_SOURCEMAP = "false"
-
-# React Router fallback
+  NODE_VERSION = "20"
+  CI = "false"
+  GENERATE_SOURCEMAP = "false"
 
 [[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
-
-# Cache static assets
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 [[headers]]
-for = "/static/*"
-[headers.values]
-Cache-Control = "public, max-age=31536000, immutable"
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
