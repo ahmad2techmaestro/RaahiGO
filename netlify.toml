@@ -1,23 +1,22 @@
 # Netlify settings for the React client (Create React App).
-# In the Netlify UI you can leave the build fields empty — this file supplies them:
-#   Base directory: client   |   Build command: npm run build   |   Publish directory: client/build
+
 [build]
-  base = "client"
-  command = "npm run build"
-  publish = "client/build"
+command = "npm --prefix client run build"
+publish = "client/build"
 
 [build.environment]
-  NODE_VERSION = "20"
-  CI = "false"                       # CRA treats lint warnings as errors when CI=true
-  GENERATE_SOURCEMAP = "false"
+NODE_VERSION = "20"
+CI = "false"
+GENERATE_SOURCEMAP = "false"
 
-# BrowserRouter uses real URLs, so every path must fall back to index.html or a refresh on /selectbus 404s.
+# React BrowserRouter fallback
+
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+from = "/*"
+to = "/index.html"
+status = 200
 
 [[headers]]
-  for = "/static/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+for = "/static/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
