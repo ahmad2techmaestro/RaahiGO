@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Install dependencies first so Docker can cache this layer when only
 # source files change, not package.json.
-COPY package*.json ./
+COPY package*.json .npmrc ./
 RUN npm ci --omit=dev
 
 COPY . .
