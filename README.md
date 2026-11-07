@@ -144,6 +144,17 @@ rules-based "smart" engine (`services/ai/localEngine.js`: cities, aliases, Hingl
 policy-grounded answers) through the exact same validation, so every AI feature still works. `/ai/status`
 reports which engine is active. Trip planning still needs the key. Server timezone defaults to `Asia/Kolkata` (set `TZ` to override).
 
+## AI Suite — Phase 1 (assistant, picks, support, journey planner)
+
+Works with or without `ANTHROPIC_API_KEY`: with a key the model chooses tools; without one a built-in rule-based planner answers from the same tools.
+
+- **Travel assistant + tool calling** (`POST /ai/assistant`): searches buses, checks bookings, previews refunds, looks up policy. The model only *asks* for a tool; each tool validates its input and calls the existing tested services. It never books, pays, cancels or locks seats. Seat holds and cancellations come back as proposals the traveller confirms in the UI through the normal authenticated endpoints.
+- **Personalised picks** (`POST /ai/personal-picks`, signed-in only): ranks real buses from the user's confirmed trips and saved preferences, with a reason per pick. No history means neutral "Top picks".
+- **RAG support**: BM25 retrieval over the policy knowledge base (with Hinglish synonyms), citations and a confidence score. If nothing relevant is found it says so instead of guessing. This is lexical search, not embeddings.
+- **Journey planner** (`POST /ai/journey`): one-stop connections (2–10 h layover) and nearby dates from real schedules, only buses with seats. Each leg is booked separately.
+
+Tests: `npm run test:agent` (76 checks, no database or network needed).
+
 ## Payments, cashback & wallet
 
 - **Gateway abstraction** (`services/payment/gateway.js`): `razorpay` (real orders, payments, refunds) or

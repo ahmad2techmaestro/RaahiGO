@@ -7,7 +7,7 @@
  * engine is the fallback if the LLM is unreachable. Every result still goes through the same
  * validation as LLM output, so nothing it produces can reach the database unchecked.
  */
-const { POLICIES } = require("./policyKB");
+const { retrieve } = require("./rag");
 
 const CITY_ALIASES = {
   mumbai: "Mumbai", bombay: "Mumbai", delhi: "Delhi", "new delhi": "Delhi", bengaluru: "Bengaluru", bangalore: "Bengaluru",
@@ -215,19 +215,10 @@ function recommendLocal(buses, preferenceText = "") {
 
 /* ───────────── support ───────────── */
 
-const STOP = new Set("what when where which that this with have does your about from into they them then than there will would could should please tell know want need how can the and for are you but not any all".split(" "));
-const tokens = (t) => String(t).toLowerCase().match(/[a-z]{4,}/g)?.filter((w) => !STOP.has(w)) || [];
 
-/** Policies that genuinely match: keyword hits count most, shared meaningful words count a little. No match = no answer. */
+/** Policies that genuinely match (BM25 retrieval, see rag.js). No match = no answer. */
 function matchPolicies(question) {
-  const q = String(question).toLowerCase();
-  const qTokens = new Set(tokens(q));
-  return POLICIES.map((p) => {
-    const kw = p.keywords.filter((k) => q.includes(k.toLowerCase())).length;
-    const body = new Set(tokens(`${p.topic} ${p.content}`));
-    const overlap = [...qTokens].filter((w) => body.has(w)).length;
-    return { p, score: kw * 3 + overlap };
-  }).filter((x) => x.score >= 3).sort((a, b) => b.score - a.score).map((x) => x.p);
+  return retrieve(question).map((r) => r.policy);
 }
 
 const firstSentences = (text, n) => (text.match(/[^.!?]+[.!?]+/g) || [text]).slice(0, n).map((x) => x.trim()).join(" ");

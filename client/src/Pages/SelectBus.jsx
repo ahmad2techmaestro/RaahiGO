@@ -12,6 +12,7 @@ import FilterPanel, { emptyFilters, countActive } from "../Components/Search/Fil
 import BusCard from "../Components/Search/BusCard";
 import BusCardSkeleton from "../Components/Search/BusCardSkeleton";
 import HelpMeChoose from "../Components/AI/HelpMeChoose";
+import { ForYouStrip, JourneyOptions } from "../Components/AI/RouteAI";
 import EmptyState from "../ui/EmptyState";
 import styles from "../Styles/search.module.css";
 
@@ -180,6 +181,10 @@ export default function SelectBus() {
             </div>
           </div>
 
+          {!loading && !errorMsg && buses.length > 0 && active === 0 && (
+            <ForYouStrip from={from} to={to} date={date} onPick={(id) => navigate({ pathname: `/bookticket/${id}`, search: `?date=${date}` })} />
+          )}
+
           {!loading && !errorMsg && buses.length > 0 && (
             <HelpMeChoose from={from} to={to} date={date} onBook={handleBook} aiAvailable={aiAvailable} />
           )}
@@ -203,6 +208,10 @@ export default function SelectBus() {
               }>
               {active > 0 ? "Widen your price range or clear a few filters to see more options on this route." : "There are no departures on this route for this date."}
             </EmptyState>
+          )}
+
+          {!loading && !errorMsg && buses.length === 0 && active === 0 && (
+            <JourneyOptions from={from} to={to} date={date} onDate={goDate} />
           )}
 
           {!loading && !errorMsg && buses.length > 0 && (

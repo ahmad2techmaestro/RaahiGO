@@ -62,6 +62,39 @@ function extractJSON(text) {
   return JSON.parse(match[0]);
 }
 
+/**
+ * One turn of Anthropic's tool-use API. Returns the raw content blocks so the agent loop can see
+ * both text and tool_use requests. The model only ever *asks* for a tool; the server decides whether
+ * and how to run it.
+ */
+async function callLLMWithTools({ system, messages, tools, maxTokens = 1024 }) {
+  if (!isAIEnabled()) throw new Error("AI_NOT_CONFIGURED");
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages, tools }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`LLM request failed (${res.status}): ${body.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  return { content: data.content || [], stopReason: data.stop_reason };
+}
+
+let overrideToolLLM = null;
+function __setToolLLMForTests(fn) {
+  overrideToolLLM = fn;
+}
+async function callLLMWithToolsDispatch(args) {
+  if (overrideToolLLM) return overrideToolLLM(args);
+  return callLLMWithTools(args);
+}
+
 // Test seam: lets the test suite inject a fake LLM without network calls.
 let overrideCallLLM = null;
 function __setLLMForTests(fn) {
@@ -76,7 +109,9 @@ async function callLLMDispatch(args) {
 module.exports = {
   isAIEnabled,
   callLLM: callLLMDispatch,
+  callLLMWithTools: callLLMWithToolsDispatch,
   extractJSON,
   __setLLMForTests,
+  __setToolLLMForTests,
   MODEL,
 };

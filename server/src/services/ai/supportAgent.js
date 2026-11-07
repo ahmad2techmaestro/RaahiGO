@@ -1,6 +1,6 @@
 const { callLLM } = require("./llmClient");
 const { answerLocal } = require("./localEngine");
-const { retrieveRelevantPolicies } = require("./policyKB");
+const { retrieve, confidenceOf } = require("./rag");
 
 const SYSTEM_PROMPT = `You are RaahiGo's customer support assistant. Answer ONLY using the
 policy information and (if given) booking details provided to you below.
@@ -28,7 +28,19 @@ async function answerSupportQuestion(question, userBookingContext = null) {
     throw new Error("Question is too long");
   }
 
-  const relevantPolicies = retrieveRelevantPolicies(question);
+  const hits = retrieve(question);
+  const relevantPolicies = hits.map((h) => h.policy);
+  const confidence = confidenceOf(hits);
+  const citations = relevantPolicies.map((p) => ({ id: p.id, topic: p.topic }));
+
+  // Nothing relevant in the knowledge base and no booking to talk about: say so instead of letting a
+  // model improvise a policy. This is the grounded "I don't know" path.
+  if (relevantPolicies.length === 0 && !userBookingContext) {
+    return {
+      answer: "I don't have that in RaahiGo's policies, so I won't guess. Please contact RaahiGo support and they'll help you directly.",
+      sources: [], citations: [], confidence: 0, engine: "grounded",
+    };
+  }
 
   const contextParts = [
     "Relevant RaahiGo policies:",
@@ -47,10 +59,11 @@ async function answerSupportQuestion(question, userBookingContext = null) {
       messages: [{ role: "user", content: contextParts.join("\n") }],
       maxTokens: 400,
     });
-    return { answer: answer.trim(), sources: relevantPolicies.map((p) => p.topic), engine: "llm" };
+    return { answer: answer.trim(), sources: relevantPolicies.map((p) => p.topic), citations, confidence, engine: "llm" };
   } catch (err) {
     // No API key or LLM unreachable: answer straight from the policy notes.
-    return { ...answerLocal(question, userBookingContext), engine: "smart" };
+    const local = answerLocal(question, userBookingContext);
+    return { ...local, citations, confidence, engine: "smart" };
   }
 }
 
