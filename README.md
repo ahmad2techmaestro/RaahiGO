@@ -163,6 +163,15 @@ Tests: `npm run test:agent` (76 checks, no database or network needed).
 
 Tests: `npm run test:phase2` (24 checks).
 
+## AI Suite — Phase 3 (forecasting, risk, disruptions, MCP)
+
+- **Demand forecasting** (`GET /operator/ai-forecast`): 7-day seat-demand estimate per route from the operator's real booking history (weekday profile scaled by recent level, with a range). It is back-tested on the last 14 days against a naive "same day last week" guess and says so when it doesn't beat it. Under 21 days of history it refuses to forecast. `npm run seed` adds 75 days of clearly synthetic history (payment ids start with `SEED-`) for the demo operator so the panel has something to show. Estimates, not promises.
+- **Booking risk review** (`GET /admin/ai-risk`, admin only): transparent rules (booking bursts, bulk seats, repeated book-and-cancel, sudden value jumps, one phone on many accounts), each with a reason. It is for human review: nothing is blocked automatically and a score is not proof of fraud.
+- **Disruption preview** (`POST /operator/buses/:id/disruption-preview`): for a delay or cancellation, shows affected bookings, alternative buses with seats and a draft message. It is read-only: it sends nothing and refunds nothing.
+- **MCP server** (`npm run mcp`, official `@modelcontextprotocol/sdk`): exposes three public read-only tools (`search_buses`, `find_journey`, `policy_lookup`) to MCP clients. Nothing that books, pays, cancels or reads private data is exposed.
+
+Tests: `npm run test:phase3` (31 checks, including a real MCP client talking to the server).
+
 ## Payments, cashback & wallet
 
 - **Gateway abstraction** (`services/payment/gateway.js`): `razorpay` (real orders, payments, refunds) or

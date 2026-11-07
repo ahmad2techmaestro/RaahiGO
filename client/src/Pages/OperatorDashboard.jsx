@@ -9,6 +9,7 @@ import PageHeader from "../ui/PageHeader";
 import Modal from "../ui/Modal";
 import EmptyState from "../ui/EmptyState";
 import OperatorInsights from "../Components/AI/OperatorInsights";
+import OperatorForecast from "../Components/AI/OperatorForecast";
 import styles from "../Styles/dashboard.module.css";
 
 const CITIES = ["Mumbai", "Delhi", "Bengaluru", "Ahmedabad", "Hyderabad", "Chennai", "Kolkata", "Pune", "Jaipur", "Surat", "Lucknow", "Kanpur", "Nagpur", "Patna", "Indore", "Thane", "Bhopal", "Goa"];
@@ -173,6 +174,7 @@ export default function OperatorDashboard() {
         )}
 
         <OperatorInsights refreshKey={tick} />
+        <OperatorForecast />
 
         <div className={styles.stack}>
           <NewBusForm onCreated={refresh} />

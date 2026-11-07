@@ -6,6 +6,7 @@ const { requireAuth, requireRole } = require("../middleware/auth.middleware");
 const { asyncHandler, AppError } = require("../utils/errors");
 const { summarizeOrders } = require("../services/operatorStats.service");
 const { computePopularRoutes, computeUserGrowth, cancellationRate } = require("../services/adminStats.service");
+const { scoreOrders } = require("../services/ai/fraudRisk");
 const { getSystemHealth } = require("../services/systemHealth.service");
 
 const app = express.Router();
@@ -112,6 +113,19 @@ app.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json(getSystemHealth());
+  })
+);
+
+/** GET /admin/ai-risk — bookings from the last 30 days with transparent risk signals, for human review only. */
+app.get(
+  "/ai-risk",
+  asyncHandler(async (req, res) => {
+    const since = new Date(Date.now() - 30 * 86400000);
+    const orders = await Order.find({ createdAt: { $gte: since } }).select("user status busDetails.from busDetails.to ticketSummary userDetails.phone createdAt").limit(5000).lean();
+    const users = await UserModel.find({ _id: { $in: [...new Set(orders.map((o) => String(o.user)))] } }).select("createdAt").lean();
+    const ages = {};
+    for (const u of users) ages[String(u._id)] = { ageHours: (Date.now() - new Date(u.createdAt).getTime()) / 3600000 };
+    res.json(scoreOrders({ orders, users: ages }));
   })
 );
 
