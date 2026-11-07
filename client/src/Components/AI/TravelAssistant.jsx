@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiSparkles } from "react-icons/hi";
-import { FiX, FiSend } from "react-icons/fi";
+import { FiX, FiSend, FiMic, FiMicOff, FiVolume2, FiVolumeX } from "react-icons/fi";
 import { API_BASE_URL } from "../../config/api";
 import { getToken, authHeader } from "../../lib/session";
 import { getAiStatus } from "../../lib/aiStatus";
@@ -103,6 +103,9 @@ function Card({ card, onBook, onDate }) {
   return null;
 }
 
+const SR = typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
+
 export default function TravelAssistant() {
   const navigate = useNavigate();
   const [available, setAvailable] = useState(true);
@@ -111,6 +114,36 @@ export default function TravelAssistant() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
+  const recRef = useRef(null);
+  const [listening, setListening] = useState(false);
+  const [lang, setLang] = useState("en-IN");
+  const [speak, setSpeak] = useState(false);
+  const [voiceNote, setVoiceNote] = useState("");
+  const [useGraph, setUseGraph] = useState(false);
+
+  // Voice uses the browser's own speech engine (Chrome/Edge/Safari). Nothing is recorded or sent by RaahiGo except the text you confirm.
+  function toggleMic() {
+    if (!SR) return;
+    if (listening) { recRef.current?.stop(); return; }
+    const rec = new SR();
+    rec.lang = lang;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.onstart = () => { setListening(true); setVoiceNote(""); };
+    rec.onresult = (e) => setInput(Array.from(e.results).map((r) => r[0].transcript).join(" ").slice(0, 500));
+    rec.onerror = (e) => setVoiceNote(e.error === "not-allowed" ? "Microphone permission was denied." : "Couldn't hear that. Please try again or type.");
+    rec.onend = () => setListening(false);
+    recRef.current = rec;
+    try { rec.start(); } catch { setListening(false); }
+  }
+  useEffect(() => () => { try { recRef.current?.abort(); } catch { /* already stopped */ } if (canSpeak) window.speechSynthesis.cancel(); }, []);
+  const say = (text) => {
+    if (!speak || !canSpeak || !text) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    window.speechSynthesis.speak(u);
+  };
 
   // The assistant works without an AI key (built-in engine); status only tells us which engine is active.
   useEffect(() => { getAiStatus().catch(() => setAvailable(true)); }, []);
@@ -149,7 +182,10 @@ export default function TravelAssistant() {
     try {
       const history = next.filter((m) => m !== GREETING).map((m) => ({ role: m.role, content: m.text }));
       const token = getToken();
-      const { data } = await axios.post(`${API_BASE_URL}/ai/assistant`, { messages: history }, token ? authHeader() : {});
+      const { data } = useGraph
+        ? await axios.post(`${API_BASE_URL}/ai/workflow`, { question: q }, token ? authHeader() : {})
+        : await axios.post(`${API_BASE_URL}/ai/assistant`, { messages: history }, token ? authHeader() : {});
+      say(data.reply);
       setMessages((m) => [...m, { role: "assistant", text: data.reply, cards: data.cards || [], action: data.action || null, engine: data.engine }]);
     } catch (err) {
       setMessages((m) => [...m, { role: "assistant", text: err?.response?.data?.message || "Sorry, I couldn't answer that just now. Please try again shortly." }]);
@@ -203,9 +239,17 @@ export default function TravelAssistant() {
               )}
             </div>
 
+            <div className={styles.voiceBar}>
+              <label><input type="checkbox" checked={useGraph} onChange={(e) => setUseGraph(e.target.checked)} /> Multi-agent mode</label>
+              {SR && <select value={lang} onChange={(e) => setLang(e.target.value)} aria-label="Voice language"><option value="en-IN">English</option><option value="hi-IN">हिन्दी</option></select>}
+              {canSpeak && <button type="button" onClick={() => setSpeak((v) => !v)} aria-pressed={speak} aria-label="Read replies aloud">{speak ? <FiVolume2 size={14} /> : <FiVolumeX size={14} />}</button>}
+              {!SR && <small>Voice input isn't supported in this browser.</small>}
+              {voiceNote && <small role="alert">{voiceNote}</small>}
+            </div>
             <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); send(input); }}>
               <input type="text" aria-label="Your message" placeholder="Ask about buses, refunds, policies…" value={input}
                 onChange={(e) => setInput(e.target.value)} disabled={loading} maxLength={500} />
+              {SR && <button type="button" className={listening ? styles.micOn : ""} onClick={toggleMic} aria-label={listening ? "Stop listening" : "Speak your request"}>{listening ? <FiMicOff size={16} /> : <FiMic size={16} />}</button>}
               <button type="submit" disabled={loading || !input.trim()} aria-label="Send"><FiSend size={16} /></button>
             </form>
           </motion.section>

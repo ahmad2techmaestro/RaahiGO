@@ -118,3 +118,12 @@
 .forYou h3 { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 800; }
 .forYou small { color: var(--ink-3); }
 .journeyBox { margin-top: var(--s-4); text-align: left; display: grid; gap: 8px; }
+
+/* ---- Voice bar ---- */
+.voiceBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 12px; border-top: 1px solid var(--line); background: var(--surface); font-size: 12px; color: var(--ink-2); }
+.voiceBar label { display: inline-flex; align-items: center; gap: 6px; }
+.voiceBar select { font-size: 12px; border: 1px solid var(--line-strong); border-radius: var(--r-pill); padding: 2px 8px; background: var(--surface); color: inherit; }
+.voiceBar button { border: 1px solid var(--line-strong); background: none; color: inherit; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; }
+.voiceBar small { color: var(--ink-3); }
+.micOn { background: var(--danger) !important; color: #fff !important; animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { opacity: .6; } }

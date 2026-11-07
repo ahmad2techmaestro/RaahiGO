@@ -8,6 +8,7 @@ import { success, error } from "../Utils/notification";
 import PageHeader from "../ui/PageHeader";
 import Modal from "../ui/Modal";
 import EmptyState from "../ui/EmptyState";
+import OperatorInsights from "../Components/AI/OperatorInsights";
 import styles from "../Styles/dashboard.module.css";
 
 const CITIES = ["Mumbai", "Delhi", "Bengaluru", "Ahmedabad", "Hyderabad", "Chennai", "Kolkata", "Pune", "Jaipur", "Surat", "Lucknow", "Kanpur", "Nagpur", "Patna", "Indore", "Thane", "Bhopal", "Goa"];
@@ -170,6 +171,8 @@ export default function OperatorDashboard() {
             <div className={styles.stat}><span className={styles.statLabel}>Cancellations</span><span className={styles.statValue}>{o.cancelledBookings}</span></div>
           </div>
         )}
+
+        <OperatorInsights refreshKey={tick} />
 
         <div className={styles.stack}>
           <NewBusForm onCreated={refresh} />

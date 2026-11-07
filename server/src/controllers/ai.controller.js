@@ -11,6 +11,8 @@ const { planTrip } = require("../services/ai/tripPlanner");
 const { answerSupportQuestion } = require("../services/ai/supportAgent");
 const { searchBuses, decorate } = require("../services/busSearch.service");
 const { runAssistant } = require("../services/ai/agent/agent");
+const { defaultDeps } = require("../services/ai/agent/tools");
+const { runWorkflow } = require("../services/ai/agent/graph");
 const { runTool } = require("../services/ai/agent/tools");
 
 /** Signed-in traveller from the Bearer token, or null. Guests are fine for most AI routes. */
@@ -291,6 +293,24 @@ app.post(
     try {
       const out = await runAssistant({ messages: req.body.messages, user: optionalUser(req) });
       res.json({ reply: out.reply, cards: out.cards, action: out.action, engine: out.engine, tools: out.toolCalls });
+    } catch (err) {
+      if (err.status === 400) throw new AppError(err.message, 400);
+      throw err;
+    }
+  })
+);
+
+/**
+ * POST /ai/workflow
+ * The same assistant tools orchestrated as a LangGraph multi-agent graph (router, search, planner,
+ * personal, account, policy, reviewer). Body: { question }. Returns { reply, cards, action, trace }.
+ */
+app.post(
+  "/workflow",
+  asyncHandler(async (req, res) => {
+    try {
+      const out = await runWorkflow({ question: req.body.question, user: optionalUser(req), deps: defaultDeps() });
+      res.json(out);
     } catch (err) {
       if (err.status === 400) throw new AppError(err.message, 400);
       throw err;

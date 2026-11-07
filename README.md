@@ -155,6 +155,14 @@ Works with or without `ANTHROPIC_API_KEY`: with a key the model chooses tools; w
 
 Tests: `npm run test:agent` (76 checks, no database or network needed).
 
+## AI Suite — Phase 2 (multi-agent graph, voice, operator insights)
+
+- **LangGraph multi-agent workflow** (`POST /ai/workflow`, built with `@langchain/langgraph`): router, search, planner, personal, account and policy agents plus a reviewer, wired as a state graph. Agents use the same validated tools as the assistant and cannot book, pay or cancel. The reviewer drops cards that contradict an empty result. The response includes a `trace` of the nodes that ran. Toggle "Multi-agent mode" in the assistant to try it. It runs without an LLM key.
+- **Voice assistant**: mic button and optional read-aloud in the assistant (English or Hindi), using the browser's built-in speech engine. Support depends on the browser (works in Chrome and Edge, not everywhere). Voice only fills the message box; seat holds still need an on-screen confirmation.
+- **AI operator insights** (`GET /operator/ai-insights`): cancellation hot-spots, buses with no recent bookings, top route by revenue and busiest travel weekday, computed from the operator's real orders. Each insight shows its evidence and a confidence level, and nothing appears below 5 bookings. These are observations, not forecasts, and nothing is changed automatically.
+
+Tests: `npm run test:phase2` (24 checks).
+
 ## Payments, cashback & wallet
 
 - **Gateway abstraction** (`services/payment/gateway.js`): `razorpay` (real orders, payments, refunds) or

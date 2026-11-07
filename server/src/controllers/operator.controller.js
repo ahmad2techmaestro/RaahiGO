@@ -5,6 +5,7 @@ const Order = require("../models/order.model");
 const { requireAuth, requireRole } = require("../middleware/auth.middleware");
 const { asyncHandler, AppError } = require("../utils/errors");
 const { summarizeOrders, occupancyPercent, groupOrdersByBus } = require("../services/operatorStats.service");
+const { insightsFor } = require("../services/ai/operatorInsights");
 const { TOTAL_SEATS, journeyDuration } = require("../services/busSearch.service");
 
 const app = express.Router();
@@ -181,6 +182,17 @@ app.get(
     });
 
     res.json({ overall, buses: perBus });
+  })
+);
+
+/** GET /operator/ai-insights — rule-based observations from this operator's real orders. */
+app.get(
+  "/ai-insights",
+  asyncHandler(async (req, res) => {
+    const busFilter = req.user.role === "ADMIN" ? {} : { operator: req.user._id };
+    const buses = await BusModel.find(busFilter).lean();
+    const orders = await Order.find({ bus: { $in: buses.map((b) => b._id) } }).lean();
+    res.json(insightsFor({ buses, orders }));
   })
 );
 
