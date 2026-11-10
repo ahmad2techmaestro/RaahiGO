@@ -1,4 +1,5 @@
 require("dotenv").config();
+const OrderModel = require("../models/order.model");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const CityModel = require("../models/city.model");
@@ -172,6 +173,40 @@ async function seed() {
     { _id: { $in: operatorBuses.map((b) => b._id) } },
     { $set: { operator: demoOperator._id } }
   );
+
+  // Seeded booking HISTORY for the demo operator's buses (75 days, weekend-heavy), so forecasting and
+  // insights have something to learn from. These are clearly synthetic: payment ids start with "SEED-".
+  await OrderModel.deleteMany({ "paymentDetails.orderId": /^SEED-/ });
+  await UserModel.deleteOne({ email: "demo.passenger@raahigo.app" });
+  const demoPassenger = await UserModel.create({
+    email: "demo.passenger@raahigo.app", password: await bcrypt.hash("passenger123", 10), gender: "other", role: "PASSENGER",
+  });
+  let rng = 12345; // fixed seed: the same history every run
+  const rand = () => { rng = (rng * 1664525 + 1013904223) % 4294967296; return rng / 4294967296; };
+  const history = [];
+  for (let back = 75; back >= 1; back--) {
+    const day = new Date(); day.setUTCHours(0, 0, 0, 0); day.setUTCDate(day.getUTCDate() - back);
+    const weekend = [0, 5, 6].includes(day.getUTCDay());
+    for (const bus of operatorBuses) {
+      const n = Math.round((weekend ? 2.2 : 0.8) * (0.6 + rand() * 0.8));
+      for (let k = 0; k < n; k++) {
+        const seatsCount = 1 + Math.floor(rand() * 3);
+        const first = 1 + Math.floor(rand() * 26);
+        const cancelled = rand() < 0.08;
+        history.push({
+          status: cancelled ? "CANCELLED" : "COMPLETED",
+          busDetails: { name: bus.companyname, from: bus.from, to: bus.to, contactemail: bus.contactemail || "seed@raahigo.app", contactphone: bus.contactphone || "0000000000", arrival: String(bus.arrival), departure: String(bus.departure) },
+          ticketSummary: { date: day, ticket: Array.from({ length: seatsCount }, (_, i) => first + i).join(","), amount: String(bus.price * seatsCount) },
+          paymentDetails: { orderId: `SEED-${back}-${bus._id}-${k}`, razorpayOrderId: "SEED", razorpayPaymentId: "SEED" },
+          userDetails: { name: "Seed Passenger", age: "30", gender: "other", email: "demo.passenger@raahigo.app", phone: "9000000000" },
+          user: demoPassenger._id, bus: bus._id,
+          createdAt: new Date(day.getTime() - Math.floor(rand() * 5 + 1) * 86400000),
+        });
+      }
+    }
+  }
+  await OrderModel.insertMany(history, { timestamps: false });
+  console.log(`  ${history.length} seeded (synthetic) bookings over 75 days for the demo operator`);
 
   // Demo admin account for the admin dashboard (Phase 11).
   // Login: demo.admin@raahigo.app / admin123

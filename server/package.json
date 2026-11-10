@@ -1,17 +1,21 @@
 {
   "name": "raahigo-server",
   "version": "1.0.0",
-  "description": "RaahiGo \u2014 MERN bus ticket booking API",
+  "description": "RaahiGo — MERN bus ticket booking API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node src/seed/seed.js",
-    "test": "node src/tests/seatLock.test.js && node src/tests/socket.test.js && node src/tests/busSearch.test.js && node src/tests/ai.test.js && node src/tests/personalization.test.js && node src/tests/ticketVerification.test.js && node src/tests/tracking.test.js && node src/tests/notifications.test.js && node src/tests/operator.test.js && node src/tests/admin.test.js && node src/tests/payments.test.js",
+    "test": "node src/tests/seatLock.test.js && node src/tests/socket.test.js && node src/tests/busSearch.test.js && node src/tests/ai.test.js && node src/tests/personalization.test.js && node src/tests/ticketVerification.test.js && node src/tests/tracking.test.js && node src/tests/notifications.test.js && node src/tests/operator.test.js && node src/tests/admin.test.js && node src/tests/payments.test.js && node src/tests/aiAgent.test.js && node src/tests/aiPhase2.test.js && node src/tests/aiPhase3.test.js",
     "test:seatlock": "node src/tests/seatLock.test.js",
     "test:socket": "node src/tests/socket.test.js",
     "test:search": "node src/tests/busSearch.test.js",
     "test:ai": "node src/tests/ai.test.js",
+    "test:phase2": "node src/tests/aiPhase2.test.js && node src/tests/aiPhase3.test.js",
+    "test:phase3": "node src/tests/aiPhase3.test.js",
+    "mcp": "node src/mcp/server.js",
+    "test:agent": "node src/tests/aiAgent.test.js",
     "test:personalization": "node src/tests/personalization.test.js",
     "test:ticket": "node src/tests/ticketVerification.test.js",
     "test:tracking": "node src/tests/tracking.test.js",
@@ -32,6 +36,9 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@langchain/core": "^1.3.5",
+    "@langchain/langgraph": "^1.7.2",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "bcryptjs": "^2.4.3",
     "compression": "^1.8.2",
     "cors": "^2.8.5",
@@ -50,7 +57,8 @@
     "razorpay": "^2.8.6",
     "socket.io": "^4.8.3",
     "swagger-ui-express": "^5.0.1",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "ioredis-mock": "^8.13.1",

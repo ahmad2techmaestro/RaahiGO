@@ -5,6 +5,9 @@ const Order = require("../models/order.model");
 const { requireAuth, requireRole } = require("../middleware/auth.middleware");
 const { asyncHandler, AppError } = require("../utils/errors");
 const { summarizeOrders, occupancyPercent, groupOrdersByBus } = require("../services/operatorStats.service");
+const { insightsFor } = require("../services/ai/operatorInsights");
+const { forecastForBuses } = require("../services/ai/demandForecast");
+const { previewDisruption } = require("../services/ai/disruption");
 const { TOTAL_SEATS, journeyDuration } = require("../services/busSearch.service");
 
 const app = express.Router();
@@ -181,6 +184,43 @@ app.get(
     });
 
     res.json({ overall, buses: perBus });
+  })
+);
+
+/** GET /operator/ai-insights — rule-based observations from this operator's real orders. */
+app.get(
+  "/ai-insights",
+  asyncHandler(async (req, res) => {
+    const busFilter = req.user.role === "ADMIN" ? {} : { operator: req.user._id };
+    const buses = await BusModel.find(busFilter).lean();
+    const orders = await Order.find({ bus: { $in: buses.map((b) => b._id) } }).lean();
+    res.json(insightsFor({ buses, orders }));
+  })
+);
+
+/** GET /operator/ai-forecast — 7-day demand ESTIMATE per route from this operator's real booking history. */
+app.get(
+  "/ai-forecast",
+  asyncHandler(async (req, res) => {
+    const busFilter = req.user.role === "ADMIN" ? {} : { operator: req.user._id };
+    const buses = await BusModel.find(busFilter).lean();
+    const since = new Date(Date.now() - 100 * 86400000);
+    const orders = await Order.find({ bus: { $in: buses.map((b) => b._id) }, "ticketSummary.date": { $gte: since } }).select("bus status ticketSummary").lean();
+    res.json({ estimate: true, routes: forecastForBuses({ buses, orders }) });
+  })
+);
+
+/** POST /operator/buses/:busId/disruption-preview — who a delay/cancellation affects. Read-only: sends and refunds nothing. */
+app.post(
+  "/buses/:busId/disruption-preview",
+  asyncHandler(async (req, res) => {
+    const bus = await loadOwnedBus(req);
+    const { date, type, delayMinutes } = req.body || {};
+    const orders = await Order.find({ bus: bus._id, status: "CONFIRMED" }).select("bus status ticketSummary").lean();
+    const others = await BusModel.find({ from: bus.from, to: bus.to, status: { $ne: "INACTIVE" } }).lean();
+    const out = previewDisruption({ bus: bus.toObject(), orders, date, type, delayMinutes, buses: others });
+    if (out.error) throw new AppError(out.error, 400);
+    res.json(out);
   })
 );
 

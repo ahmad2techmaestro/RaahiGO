@@ -1,6 +1,6 @@
 import { ToastContainer } from "react-toastify";
 import AllRoutes from "./Routes/AllRoutes";
-import SupportWidget from "./Components/AI/SupportWidget";
+import TravelAssistant from "./Components/AI/TravelAssistant";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 
 function Toasts() {
@@ -14,7 +14,7 @@ export default function App() {
       <div className="app">
         <AllRoutes />
         <Toasts />
-        <SupportWidget />
+        <TravelAssistant />
       </div>
     </ThemeProvider>
   );

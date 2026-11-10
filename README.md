@@ -144,6 +144,34 @@ rules-based "smart" engine (`services/ai/localEngine.js`: cities, aliases, Hingl
 policy-grounded answers) through the exact same validation, so every AI feature still works. `/ai/status`
 reports which engine is active. Trip planning still needs the key. Server timezone defaults to `Asia/Kolkata` (set `TZ` to override).
 
+## AI Suite — Phase 1 (assistant, picks, support, journey planner)
+
+Works with or without `ANTHROPIC_API_KEY`: with a key the model chooses tools; without one a built-in rule-based planner answers from the same tools.
+
+- **Travel assistant + tool calling** (`POST /ai/assistant`): searches buses, checks bookings, previews refunds, looks up policy. The model only *asks* for a tool; each tool validates its input and calls the existing tested services. It never books, pays, cancels or locks seats. Seat holds and cancellations come back as proposals the traveller confirms in the UI through the normal authenticated endpoints.
+- **Personalised picks** (`POST /ai/personal-picks`, signed-in only): ranks real buses from the user's confirmed trips and saved preferences, with a reason per pick. No history means neutral "Top picks".
+- **RAG support**: BM25 retrieval over the policy knowledge base (with Hinglish synonyms), citations and a confidence score. If nothing relevant is found it says so instead of guessing. This is lexical search, not embeddings.
+- **Journey planner** (`POST /ai/journey`): one-stop connections (2–10 h layover) and nearby dates from real schedules, only buses with seats. Each leg is booked separately.
+
+Tests: `npm run test:agent` (76 checks, no database or network needed).
+
+## AI Suite — Phase 2 (multi-agent graph, voice, operator insights)
+
+- **LangGraph multi-agent workflow** (`POST /ai/workflow`, built with `@langchain/langgraph`): router, search, planner, personal, account and policy agents plus a reviewer, wired as a state graph. Agents use the same validated tools as the assistant and cannot book, pay or cancel. The reviewer drops cards that contradict an empty result. The response includes a `trace` of the nodes that ran. Toggle "Multi-agent mode" in the assistant to try it. It runs without an LLM key.
+- **Voice assistant**: mic button and optional read-aloud in the assistant (English or Hindi), using the browser's built-in speech engine. Support depends on the browser (works in Chrome and Edge, not everywhere). Voice only fills the message box; seat holds still need an on-screen confirmation.
+- **AI operator insights** (`GET /operator/ai-insights`): cancellation hot-spots, buses with no recent bookings, top route by revenue and busiest travel weekday, computed from the operator's real orders. Each insight shows its evidence and a confidence level, and nothing appears below 5 bookings. These are observations, not forecasts, and nothing is changed automatically.
+
+Tests: `npm run test:phase2` (24 checks).
+
+## AI Suite — Phase 3 (forecasting, risk, disruptions, MCP)
+
+- **Demand forecasting** (`GET /operator/ai-forecast`): 7-day seat-demand estimate per route from the operator's real booking history (weekday profile scaled by recent level, with a range). It is back-tested on the last 14 days against a naive "same day last week" guess and says so when it doesn't beat it. Under 21 days of history it refuses to forecast. `npm run seed` adds 75 days of clearly synthetic history (payment ids start with `SEED-`) for the demo operator so the panel has something to show. Estimates, not promises.
+- **Booking risk review** (`GET /admin/ai-risk`, admin only): transparent rules (booking bursts, bulk seats, repeated book-and-cancel, sudden value jumps, one phone on many accounts), each with a reason. It is for human review: nothing is blocked automatically and a score is not proof of fraud.
+- **Disruption preview** (`POST /operator/buses/:id/disruption-preview`): for a delay or cancellation, shows affected bookings, alternative buses with seats and a draft message. It is read-only: it sends nothing and refunds nothing.
+- **MCP server** (`npm run mcp`, official `@modelcontextprotocol/sdk`): exposes three public read-only tools (`search_buses`, `find_journey`, `policy_lookup`) to MCP clients. Nothing that books, pays, cancels or reads private data is exposed.
+
+Tests: `npm run test:phase3` (31 checks, including a real MCP client talking to the server).
+
 ## Payments, cashback & wallet
 
 - **Gateway abstraction** (`services/payment/gateway.js`): `razorpay` (real orders, payments, refunds) or

@@ -94,3 +94,36 @@
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips i { font-style: normal; padding: 4px 11px; font-size: var(--fs-xs); font-weight: 700; color: #fff; background: rgba(255,255,255,.14); border-radius: var(--r-pill); }
 .compact .form { background: rgba(255,255,255,.08); }
+
+/* ---- Travel assistant cards ---- */
+.panelWide { width: 420px; height: 600px; }
+.msg:has(.card) { max-width: 96%; width: 96%; }
+.card { margin-top: 10px; padding: 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); display: grid; gap: 8px; }
+.card h4 { font-size: var(--fs-xs); font-weight: 800; letter-spacing: .03em; color: var(--ink-2); }
+.card p { margin: 0; }
+.cardRow { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.cardRow > div:first-child { display: grid; gap: 2px; min-width: 0; }
+.cardRow span, .cardRow em { font-size: 12px; color: var(--ink-2); font-style: normal; }
+.cardRow em { color: var(--brand); }
+.cardEnd { display: grid; gap: 6px; justify-items: end; align-content: start; }
+.cardEnd button, .confirm button { padding: 5px 12px; font-size: 12px; font-weight: 700; border: 0; border-radius: var(--r-pill); background: var(--accent); color: var(--accent-ink); }
+.tag { font-style: normal; margin-left: 6px; padding: 2px 8px; font-size: 10px; border-radius: var(--r-pill); background: var(--brand-soft); color: var(--brand); }
+.confirm { margin-top: 10px; padding: 10px; border: 1px dashed var(--brand-line); border-radius: var(--r-sm); display: grid; gap: 8px; }
+.confirm p { margin: 0; }
+.confirm small { color: var(--danger); opacity: 1; }
+.sources { display: block; margin-top: 6px; font-size: 11px; opacity: .65; }
+
+/* ---- Personalised picks + journey options (results page) ---- */
+.forYou { margin-bottom: var(--s-4); padding: var(--s-4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); display: grid; gap: 10px; }
+.forYou h3 { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 800; }
+.forYou small { color: var(--ink-3); }
+.journeyBox { margin-top: var(--s-4); text-align: left; display: grid; gap: 8px; }
+
+/* ---- Voice bar ---- */
+.voiceBar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 12px; border-top: 1px solid var(--line); background: var(--surface); font-size: 12px; color: var(--ink-2); }
+.voiceBar label { display: inline-flex; align-items: center; gap: 6px; }
+.voiceBar select { font-size: 12px; border: 1px solid var(--line-strong); border-radius: var(--r-pill); padding: 2px 8px; background: var(--surface); color: inherit; }
+.voiceBar button { border: 1px solid var(--line-strong); background: none; color: inherit; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; }
+.voiceBar small { color: var(--ink-3); }
+.micOn { background: var(--danger) !important; color: #fff !important; animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { opacity: .6; } }

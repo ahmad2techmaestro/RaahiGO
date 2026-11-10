@@ -6,6 +6,7 @@ import { authHeader } from "../lib/session";
 import { formatDate, formatINR } from "../lib/format";
 import { success, error } from "../Utils/notification";
 import PageHeader from "../ui/PageHeader";
+import AdminRisk from "../Components/AI/AdminRisk";
 import EmptyState from "../ui/EmptyState";
 import styles from "../Styles/dashboard.module.css";
 
@@ -108,6 +109,8 @@ export default function AdminDashboard() {
               </div>
             </section>
           )}
+
+          <AdminRisk />
 
           <section className={styles.panel}>
             <h2>Users</h2>

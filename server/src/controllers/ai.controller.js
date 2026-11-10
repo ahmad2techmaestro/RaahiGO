@@ -10,6 +10,21 @@ const { recommendFromResults } = require("../services/ai/recommender");
 const { planTrip } = require("../services/ai/tripPlanner");
 const { answerSupportQuestion } = require("../services/ai/supportAgent");
 const { searchBuses, decorate } = require("../services/busSearch.service");
+const { runAssistant } = require("../services/ai/agent/agent");
+const { defaultDeps } = require("../services/ai/agent/tools");
+const { runWorkflow } = require("../services/ai/agent/graph");
+const { runTool } = require("../services/ai/agent/tools");
+
+/** Signed-in traveller from the Bearer token, or null. Guests are fine for most AI routes. */
+function optionalUser(req) {
+  const header = req.headers.authorization || "";
+  if (!header.startsWith("Bearer ") || !process.env.JWT_SECRET) return null;
+  try {
+    return require("jsonwebtoken").verify(header.slice(7), process.env.JWT_SECRET).user || null;
+  } catch {
+    return null;
+  }
+}
 
 const app = express.Router();
 
@@ -20,6 +35,49 @@ app.get("/status", (req, res) => {
   // The smart engine is always on; an API key upgrades it to the LLM.
   res.json({ aiEnabled: true, engine: isAIEnabled() ? "llm" : "smart" });
 });
+
+// Database-only helpers (no model call), so they get a looser limit than the LLM routes below.
+const lookupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests. Please try again in a few minutes." },
+});
+
+/**
+ * POST /ai/journey
+ * Connections and nearby dates when a direct bus is missing or sold out. Real buses only.
+ */
+app.post(
+  "/journey",
+  lookupLimiter,
+  asyncHandler(async (req, res) => {
+    const { from, to, date } = req.body;
+    if (!from || !to) throw new AppError("from and to are required", 400);
+    const out = await runTool("find_journey", { from, to, date }, { user: optionalUser(req) });
+    if (out.data.error) throw new AppError(out.data.error, 400);
+    res.json(out.data);
+  })
+);
+
+/**
+ * POST /ai/personal-picks
+ * "For you" ranking from the signed-in traveller's own trips and saved preferences.
+ */
+app.post(
+  "/personal-picks",
+  lookupLimiter,
+  asyncHandler(async (req, res) => {
+    const user = optionalUser(req);
+    if (!user) return res.json({ personalised: false, picks: [], basis: { personalised: false, signals: [] } });
+    const { from, to, date } = req.body;
+    if (!from || !to) throw new AppError("from and to are required", 400);
+    const out = await runTool("personal_picks", { from, to, date }, { user });
+    if (out.data.error) throw new AppError(out.data.error, 400);
+    res.json({ personalised: out.data.basis.personalised, picks: out.data.picks, basis: out.data.basis });
+  })
+);
 
 // LLM calls cost real money per request, so everything else here is
 // rate-limited more tightly than ordinary API routes.
@@ -220,6 +278,43 @@ app.post(
 
     const result = await answerSupportQuestion(question, bookingContext);
     res.json(result);
+  })
+);
+
+/**
+ * POST /ai/assistant
+ * Tool-calling travel assistant. Body: { messages: [{ role, content }] } with the latest message
+ * last. Returns { reply, cards, action, engine }. It never books, pays or cancels; see
+ * services/ai/agent/tools.js.
+ */
+app.post(
+  "/assistant",
+  asyncHandler(async (req, res) => {
+    try {
+      const out = await runAssistant({ messages: req.body.messages, user: optionalUser(req) });
+      res.json({ reply: out.reply, cards: out.cards, action: out.action, engine: out.engine, tools: out.toolCalls });
+    } catch (err) {
+      if (err.status === 400) throw new AppError(err.message, 400);
+      throw err;
+    }
+  })
+);
+
+/**
+ * POST /ai/workflow
+ * The same assistant tools orchestrated as a LangGraph multi-agent graph (router, search, planner,
+ * personal, account, policy, reviewer). Body: { question }. Returns { reply, cards, action, trace }.
+ */
+app.post(
+  "/workflow",
+  asyncHandler(async (req, res) => {
+    try {
+      const out = await runWorkflow({ question: req.body.question, user: optionalUser(req), deps: defaultDeps() });
+      res.json(out);
+    } catch (err) {
+      if (err.status === 400) throw new AppError(err.message, 400);
+      throw err;
+    }
   })
 );
 
